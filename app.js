@@ -27,6 +27,7 @@ function handleRequest(request, response, path) {
 	if (request.url === "/pull") {
 		pull(path);
 		
+		console.log("pulled");
 		response.end("pulled");
 	}
 	else {

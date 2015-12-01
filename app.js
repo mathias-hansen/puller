@@ -2,13 +2,42 @@ var fs = require("fs");
 var http = require("http");
 var exec = require("child_process").exec;
 
+//log
+function writeLog(data, resolve) {
+	fs.writeFile("log", data, 'utf8', resolve);
+}
+
+function appendLog(type, message) {
+	message = "\n[" + type.toUpperCase() + "]\t" + new Date().toString() + "\t" + message;
+	
+	return new Promise(function(resolve, reject) {
+		
+		fs.exists("log", function (exists) {
+			if (exists) {
+				fs.readFile("log", function (err, data) {
+					if (err) reject(err);
+					else {
+						writeLog(data + message, resolve);
+					}
+				});
+			} else {
+				writeLog(message, resolve);
+			}
+		});
+	});
+}
+
 // config
 function getConfig() {
+	var config;
+	
 	return new Promise(function(resolve, reject) {
 		fs.readFile("config.json", function (err, data) {
 			if (err) reject(err);
 			else {
-				var config = JSON.parse(data);
+				if (data) {
+					config = JSON.parse(data);
+				}
 				
 				if (!config.hasOwnProperty("port")) {
 					config.port = 8080;
@@ -27,7 +56,7 @@ function getConfig() {
 function pull(path) {
 	var child = exec("cd " + path + " && git pull origin master", function (error, stdout, stderr) {
 		if (error !== null) {
-			console.log('exec error: ' + error);
+			appendLog("error", error);
 		}
 	});
 	
@@ -42,6 +71,9 @@ function handleRequest(request, response, repos) {
 		request.on("data", function (chunk) {
 			payload += chunk;
 		});
+		request.on("error", function (error) {
+			throw error;
+		});
 		request.on('end', function() {
 			payload = JSON.parse(payload);
 			
@@ -51,11 +83,11 @@ function handleRequest(request, response, repos) {
 			pull(repoPath);
 		});
 		
-		console.log("pulled");
-		response.end("pulled");
+		appendLog("ok", "pulled");
+		response.end("");
 	}
 	else {
-		response.end(":)");	
+		response.end("");	
 	}
 }
 
@@ -69,14 +101,20 @@ function startServer(config) {
 	});
 	
 	server.listen(port, hostname, function () {
-		console.log("server listening on http://" + hostname + ":" + port + "/");
+		appendLog("ok", "server listening on http://" + hostname + ":" + port + "/");
 	});
 }
 
 getConfig().then(function (config) {
-	if (config.port && config.hostname) {
+	if (config.repos) {
 		startServer(config);
 	} else {
-		throw "config must have port and homstname";
+		appendLog("error", "repos missing from config.json");
+	}
+}).catch(function (error) {
+	if (error.message === "ENOENT: no such file or directory, open 'config.json'") {
+		appendLog("error", "config.json is missing");
+	} else {
+		appendLog("error", error.message);
 	}
 });

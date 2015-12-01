@@ -2,9 +2,10 @@ var fs = require("fs");
 var http = require("http");
 var exec = require("child_process").exec;
 
+// config
 function getConfig() {
 	return new Promise(function(resolve, reject) {
-		fs.readFile("config.json", function (err, data) {
+		fs.readFile("config.json.sample", function (err, data) {
 			if (err) reject(err);
 			else {
 				resolve(JSON.parse(data));
@@ -13,6 +14,7 @@ function getConfig() {
 	});
 }
 
+// git
 function pull(path) {
 	var child = exec("cd " + path + " && git pull origin master", function (error, stdout, stderr) {
 		if (error !== null) {
@@ -23,9 +25,24 @@ function pull(path) {
 	return child;
 }
 
-function handleRequest(request, response, path) {
+// server
+function handleRequest(request, response, repos) {
 	if (request.url === "/pull") {
-		pull(path);
+		var payload = "";
+		
+		request.on("data", function (chunk) {
+			payload += chunk;
+		});
+		request.on('end', function() {
+			payload = JSON.parse(payload);
+			
+			var repoName = payload.compare
+				.match(/https:\/\/github.com\/\w+\/\w+/)[0]
+				.replace(/https:\/\/github.com\//, ""),
+				repoPath = repos[repoName];
+				
+			pull(repoPath);
+		});
 		
 		console.log("pulled");
 		response.end("pulled");
@@ -38,10 +55,10 @@ function handleRequest(request, response, path) {
 function startServer(config) {
 	var port = config.port,
 		hostname = config.hostname,
-		repoPath = config["repo-path"];
+		repos = config.repos;
 	
 	var server = http.createServer(function (request, response) {
-		handleRequest(request, response, repoPath);
+		handleRequest(request, response, repos);
 	});
 	
 	server.listen(port, hostname, function () {

@@ -5,7 +5,7 @@ var exec = require("child_process").exec;
 // config
 function getConfig() {
 	return new Promise(function(resolve, reject) {
-		fs.readFile("config.json.sample", function (err, data) {
+		fs.readFile("config.json", function (err, data) {
 			if (err) reject(err);
 			else {
 				resolve(JSON.parse(data));

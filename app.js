@@ -36,9 +36,7 @@ function handleRequest(request, response, repos) {
 		request.on('end', function() {
 			payload = JSON.parse(payload);
 			
-			var repoName = payload.compare
-				.match(/https:\/\/github.com\/\w+\/\w+/)[0]
-				.replace(/https:\/\/github.com\//, ""),
+			var repoName = payload.repository.full_name,
 				repoPath = repos[repoName];
 				
 			pull(repoPath);

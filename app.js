@@ -8,7 +8,16 @@ function getConfig() {
 		fs.readFile("config.json", function (err, data) {
 			if (err) reject(err);
 			else {
-				resolve(JSON.parse(data));
+				var config = JSON.parse(data);
+				
+				if (!config.hasOwnProperty("port")) {
+					config.port = 8080;
+				}
+				if (!config.hasOwnProperty("hostname")) {
+					config.hostname = "0.0.0.0";
+				}
+				
+				resolve(config);
 			}
 		});
 	});

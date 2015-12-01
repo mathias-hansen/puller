@@ -1,12 +1,10 @@
 # puller
 
-the root of puller must contain 
-
 config.json
 
 port: number default 8080
 
-the port of the web server
+<small>the port of the web server</small>
 
 hostname: string default 0.0.0.0
 

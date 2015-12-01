@@ -1,4 +1,9 @@
 # puller
 
-the root of puller must contain config.json with port, hostname and repo-path
-parameters
+the root of puller must contain 
+config.json
+port: number required
+hostname: string required
+repos: { required
+	"owner/repo": "/path/to/repo"
+}

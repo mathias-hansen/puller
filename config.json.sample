@@ -2,6 +2,6 @@
 	"hostname": "0.0.0.0",
 	"port": "5555",
 	"repos": {
-		"r0flbear/test": "/repos/test"
+		"owner/repo": "/path/to/repo"
 	}
 }
